@@ -4,11 +4,19 @@ use std::{
     time::Duration,
 };
 
+use bytes::Bytes;
 use eyre::Result;
-use futures_util::{stream::SplitSink, SinkExt, StreamExt, TryStreamExt};
+use futures_util::{SinkExt, StreamExt, TryStreamExt, stream::SplitSink};
 use papaya::HashMap;
-use tokio::{net::TcpStream, sync::mpsc};
-use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
+use tokio::{
+    net::TcpStream,
+    sync::mpsc::{self, UnboundedReceiver, UnboundedSender},
+};
+use tokio_tungstenite::{
+    WebSocketStream,
+    tungstenite::{self, Message},
+};
+use tracing::{debug, error, info, trace, warn};
 
 use crate::{
     config::Setup,
@@ -23,16 +31,18 @@ const SECOND: Duration = Duration::from_secs(1);
 
 pub struct Context {
     clients: HashMap<SocketAddr, Sender>,
+    database_channel: UnboundedSender<tungstenite::Message>,
     history: Mutex<Scores>,
     max_history_len: usize,
 }
 
 impl Context {
-    pub fn new(setup: &Setup) -> Self {
+    pub fn new(setup: &Setup, channel: UnboundedSender<tungstenite::Message>) -> Self {
         Self {
             history: Mutex::new(Scores::new()),
             clients: HashMap::new(),
             max_history_len: setup.history_length,
+            database_channel: channel,
         }
     }
 
@@ -41,6 +51,7 @@ impl Context {
             clients,
             history,
             max_history_len,
+            database_channel,
         } = &*ctx;
 
         info!("Fetching scores every {interval} seconds...");
@@ -126,6 +137,7 @@ impl Context {
             for tx in pin.values() {
                 let _: Result<_, _> = tx.send(Message::Text("start-batch".into()));
             }
+            let _: Result<_, _> = database_channel.send(Message::Text("start-batch".into()));
 
             for score in range {
                 sent += 1;
@@ -133,12 +145,14 @@ impl Context {
                 for tx in pin.values() {
                     let _: Result<_, _> = tx.send(score.as_message());
                 }
+                let _: Result<_, _> = database_channel.send(score.as_message());
             }
 
             // Send end-batch messages to every client
             for tx in pin.values() {
                 let _: Result<_, _> = tx.send(Message::Text("end-batch".into()));
             }
+            let _: Result<_, _> = database_channel.send(Message::Text("end-batch".into()));
 
             info!("Sent {sent} scores to {} client(s)", clients.len());
 

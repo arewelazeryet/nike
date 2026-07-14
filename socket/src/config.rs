@@ -63,7 +63,6 @@ pub struct Setup {
     pub interval: u64,
     #[serde(default = "Setup::default_history_length")]
     pub history_length: usize,
-    pub resume_score_id: Option<u64>,
 }
 
 #[allow(clippy::module_name_repetitions)]

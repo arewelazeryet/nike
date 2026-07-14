@@ -1,22 +1,23 @@
 use std::{borrow::Cow, cmp, time::Duration};
 
 use bytes::Bytes;
-use eyre::{Context as _, Result};
+use eyre::{Context as _, Result, bail};
 use http_body_util::{BodyExt, Full};
 use hyper::{
-    header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, USER_AGENT},
     Request, StatusCode,
+    header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, USER_AGENT},
 };
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use hyper_util::{
-    client::legacy::{connect::HttpConnector, Builder, Client},
+    client::legacy::{Builder, Client, connect::HttpConnector},
     rt::TokioExecutor,
 };
 use memchr::memmem;
+use tracing::{debug, error, info, warn};
 
 use crate::config::OsuConfig;
 
-use super::{authorization::Authorization, Scores, ScoresDeserializer};
+use super::{Scores, ScoresDeserializer, authorization::Authorization};
 
 const MY_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 const APPLICATION_JSON: &str = "application/json";

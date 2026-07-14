@@ -1,0 +1,13 @@
+[package]
+name = "ushio-runtime"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+color-eyre = "0.6.5"
+tokio.workspace = true
+tokio-tungstenite.workspace = true
+tracing = { workspace = true, features = ["async-await"] }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+ushio-database = { path = "../database" }
+ushio-socket = { path = "../socket" }
