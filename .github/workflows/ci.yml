@@ -41,8 +41,8 @@ jobs:
       - name: Install nightly toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-            components: rustfmt
-            toolchain: nightly
+          components: rustfmt
+          toolchain: nightly
 
       - name: Check code formatting
         run: cargo fmt -- --check
@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-    
+
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -104,7 +104,7 @@ jobs:
 
   build-release:
     name: build-release
-    needs: ['create-release']
+    needs: ["create-release"]
     runs-on: ${{ matrix.os }}
     env:
       RUST_BACKTRACE: 1
@@ -112,89 +112,89 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - build: linux
-          os: ubuntu-20.04
-          target: x86_64-unknown-linux-gnu
-        - build: linux
-          os: ubuntu-20.04
-          target: x86_64-unknown-linux-musl
-        - build: stable-aarch64
-          os: ubuntu-20.04
-          target: aarch64-unknown-linux-gnu
-          qemu: qemu-aarch64
-        - build: stable-arm-gnueabihf
-          os: ubuntu-20.04
-          target: armv7-unknown-linux-gnueabihf
-          qemu: qemu-arm
-        - build: macos
-          os: macos-latest
-          target: x86_64-apple-darwin
-        - build: win-msvc
-          os: windows-latest
-          target: x86_64-pc-windows-msvc
+          - build: linux
+            os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+          - build: linux
+            os: ubuntu-20.04
+            target: x86_64-unknown-linux-musl
+          - build: stable-aarch64
+            os: ubuntu-20.04
+            target: aarch64-unknown-linux-gnu
+            qemu: qemu-aarch64
+          - build: stable-arm-gnueabihf
+            os: ubuntu-20.04
+            target: armv7-unknown-linux-gnueabihf
+            qemu: qemu-arm
+          - build: macos
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - build: win-msvc
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: stable
-        target: ${{ matrix.target }}
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
 
-    - name: Build release binary
-      shell: bash
-      run: |
-        cargo build --verbose --release
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          bin="target/release/scores-ws.exe"
-        else
-          bin="target/release/scores-ws"
-        fi
-        echo "BIN=$bin" >> $GITHUB_ENV
+      - name: Build release binary
+        shell: bash
+        run: |
+          cargo build --verbose --release
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            bin="target/release/ushio-runtime.exe"
+          else
+            bin="target/release/ushio-runtime"
+          fi
+          echo "BIN=$bin" >> $GITHUB_ENV
 
-    - name: Strip release binary (macos)
-      if: matrix.os == 'macos-latest'
-      shell: bash
-      run: strip "$BIN"
+      - name: Strip release binary (macos)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: strip "$BIN"
 
-    - name: Determine archive name
-      shell: bash
-      run: |
-        version="${{ needs.create-release.outputs.version }}"
-        echo "ARCHIVE=scores-ws-$version-${{ matrix.target }}" >> $GITHUB_ENV
+      - name: Determine archive name
+        shell: bash
+        run: |
+          version="${{ needs.create-release.outputs.version }}"
+          echo "ARCHIVE=ushio-runtime-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
-    - name: Creating directory for archive
-      shell: bash
-      run: |
-        mkdir -p "$ARCHIVE"/
-        cp "$BIN" "$ARCHIVE"/
-        cp README.md "$ARCHIVE"/
-        cp config.toml.example "$ARCHIVE"/config.toml
+      - name: Creating directory for archive
+        shell: bash
+        run: |
+          mkdir -p "$ARCHIVE"/
+          cp "$BIN" "$ARCHIVE"/
+          cp README.md "$ARCHIVE"/
+          cp config.toml.example "$ARCHIVE"/config.toml
 
-    - name: Build archive (Windows)
-      shell: bash
-      if: matrix.os == 'windows-latest'
-      run: |
-        7z a "$ARCHIVE.zip" "$ARCHIVE"
-        certutil -hashfile "$ARCHIVE.zip" SHA256 > "$ARCHIVE.zip.sha256"
-        echo "ASSET=$ARCHIVE.zip" >> $GITHUB_ENV
-        echo "ASSET_SUM=$ARCHIVE.zip.sha256" >> $GITHUB_ENV
+      - name: Build archive (Windows)
+        shell: bash
+        if: matrix.os == 'windows-latest'
+        run: |
+          7z a "$ARCHIVE.zip" "$ARCHIVE"
+          certutil -hashfile "$ARCHIVE.zip" SHA256 > "$ARCHIVE.zip.sha256"
+          echo "ASSET=$ARCHIVE.zip" >> $GITHUB_ENV
+          echo "ASSET_SUM=$ARCHIVE.zip.sha256" >> $GITHUB_ENV
 
-    - name: Build archive (Unix)
-      shell: bash
-      if: matrix.os != 'windows-latest'
-      run: |
-        tar czf "$ARCHIVE.tar.gz" "$ARCHIVE"
-        shasum -a 256 "$ARCHIVE.tar.gz" > "$ARCHIVE.tar.gz.sha256"
-        echo "ASSET=$ARCHIVE.tar.gz" >> $GITHUB_ENV
-        echo "ASSET_SUM=$ARCHIVE.tar.gz.sha256" >> $GITHUB_ENV
+      - name: Build archive (Unix)
+        shell: bash
+        if: matrix.os != 'windows-latest'
+        run: |
+          tar czf "$ARCHIVE.tar.gz" "$ARCHIVE"
+          shasum -a 256 "$ARCHIVE.tar.gz" > "$ARCHIVE.tar.gz.sha256"
+          echo "ASSET=$ARCHIVE.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_SUM=$ARCHIVE.tar.gz.sha256" >> $GITHUB_ENV
 
-    - name: Upload release archive
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      shell: bash
-      run: |
-        version="${{ needs.create-release.outputs.version }}"
-        gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
+      - name: Upload release archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          version="${{ needs.create-release.outputs.version }}"
+          gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
