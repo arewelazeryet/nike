@@ -1,5 +1,5 @@
 [package]
-name = "ushio-socket"
+name = "nike-socket"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,7 +9,7 @@ ring = ["rustls/ring"]
 aws = ["rustls/aws_lc_rs"]
 
 [dependencies]
-ushio-database = { path = "../database" }
+nike-database = { path = "../database" }
 bytes = "1.9.0"
 database = "0.5.0"
 eyre = "0.6.12"

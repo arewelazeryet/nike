@@ -7,7 +7,7 @@ async fn main() -> Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
-    let database = ushio_database::initialize_database().await?;
+    let database = nike_database::initialize_database().await?;
     tracing::info!("Initialized a database connection");
 
     let cursor = database.get_last_inserted_score().await? as u64;
@@ -16,8 +16,8 @@ async fn main() -> Result<()> {
     let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
 
     tokio::select! {
-        _ = ushio_socket::init_socket_thread(sender, cursor) => {},
-        _ = ushio_database::database_loop(database, receiver) => {},
+        _ = nike_socket::init_socket_thread(sender, cursor) => {},
+        _ = nike_database::database_loop(database, receiver) => {},
 
     }
     Ok(())

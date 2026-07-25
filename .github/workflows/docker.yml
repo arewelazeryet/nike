@@ -75,7 +75,7 @@ jobs:
       - name: Prepare Docker build context
         run: |
           mkdir -p dist/amd64
-          cp target/x86_64-unknown-linux-musl/release/ushio-runtime dist/amd64/ushio-runtime
+          cp target/x86_64-unknown-linux-musl/release/nike-runtime dist/amd64/nike-runtime
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -161,7 +161,7 @@ jobs:
       - name: Prepare Docker build context
         run: |
           mkdir -p dist/arm64
-          cp target/aarch64-unknown-linux-musl/release/ushio-runtime dist/arm64/ushio-runtime
+          cp target/aarch64-unknown-linux-musl/release/nike-runtime dist/arm64/nike-runtime
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

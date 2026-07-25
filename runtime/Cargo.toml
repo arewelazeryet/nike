@@ -1,5 +1,5 @@
 [package]
-name = "ushio-runtime"
+name = "nike-runtime"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,5 +9,5 @@ tokio.workspace = true
 tokio-tungstenite.workspace = true
 tracing = { workspace = true, features = ["async-await"] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-ushio-database = { path = "../database" }
-ushio-socket = { path = "../socket" }
+nike-database = { path = "../database" }
+nike-socket = { path = "../socket" }

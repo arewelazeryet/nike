@@ -148,9 +148,9 @@ jobs:
         run: |
           cargo build --verbose --release
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            bin="target/release/ushio-runtime.exe"
+            bin="target/release/nike-runtime.exe"
           else
-            bin="target/release/ushio-runtime"
+            bin="target/release/nike-runtime"
           fi
           echo "BIN=$bin" >> $GITHUB_ENV
 
@@ -163,7 +163,7 @@ jobs:
         shell: bash
         run: |
           version="${{ needs.create-release.outputs.version }}"
-          echo "ARCHIVE=ushio-runtime-$version-${{ matrix.target }}" >> $GITHUB_ENV
+          echo "ARCHIVE=nike-runtime-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
       - name: Creating directory for archive
         shell: bash
