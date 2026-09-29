@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use eyre::{Context as _, ContextCompat, Result, bail};
+use color_eyre::eyre::{Context, ContextCompat, Result, bail, eyre};
 use memchr::memmem;
 use tokio_tungstenite::tungstenite::Message;
 
@@ -131,9 +131,7 @@ impl Deserializer {
             .try_fold((), |(), (idx, &byte)| match byte {
                 b' ' => ControlFlow::Continue(()),
                 _ if until(byte) => ControlFlow::Break(Ok(idx)),
-                _ => {
-                    ControlFlow::Break(Err(eyre::eyre!("Unexpected character `{}`", byte as char)))
-                }
+                _ => ControlFlow::Break(Err(eyre!("Unexpected character `{}`", byte as char))),
             })
             .break_value()
             .context("`until` condition never met")?

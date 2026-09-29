@@ -6,15 +6,18 @@ mod osu;
 use std::{net::SocketAddr, sync::Arc};
 
 use crate::{config::Config, context::Context, osu::Osu};
-use eyre::{Context as _, Result};
+use color_eyre::{Result, eyre::Context as _};
 use tokio::{net::TcpListener, sync::mpsc::UnboundedSender};
 use tokio_tungstenite::tungstenite::Message;
 use tracing::info;
 
-pub async fn init_socket_thread(channel: UnboundedSender<Message>, resume_id: u64) -> Result<()> {
+pub async fn init_socket_thread(
+    channel: UnboundedSender<Message>,
+    resume_id: Option<u64>,
+) -> Result<()> {
     let Config { setup, osu } = Config::parse();
 
-    let osu = Osu::new(osu).context("Failed to create osu! client")?;
+    let osu = Osu::new(osu).wrap_err("Failed to create osu! client")?;
     let ctx = Arc::new(Context::new(&setup, channel));
 
     let addr = SocketAddr::new(setup.ip_addr, setup.port);

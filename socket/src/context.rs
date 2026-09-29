@@ -4,13 +4,12 @@ use std::{
     time::Duration,
 };
 
-use bytes::Bytes;
-use eyre::Result;
+use color_eyre::Result;
 use futures_util::{SinkExt, StreamExt, TryStreamExt, stream::SplitSink};
 use papaya::HashMap;
 use tokio::{
     net::TcpStream,
-    sync::mpsc::{self, UnboundedReceiver, UnboundedSender},
+    sync::mpsc::{self, UnboundedSender},
 };
 use tokio_tungstenite::{
     WebSocketStream,
@@ -179,6 +178,7 @@ impl Context {
 
         let (tx, mut rx) = mpsc::unbounded_channel();
         ctx.clients.pin().insert(addr, tx.clone());
+        metrics::histogram!("nike.websocket_connection_count").record(ctx.clients.len() as u32);
 
         let (mut outgoing, mut incoming) = ws_stream.split();
 

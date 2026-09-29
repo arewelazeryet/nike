@@ -9,11 +9,10 @@ ring = ["rustls/ring"]
 aws = ["rustls/aws_lc_rs"]
 
 [dependencies]
-nike-database = { path = "../database" }
-bytes = "1.9.0"
+bytes.workspace = true
 database = "0.5.0"
-eyre = "0.6.12"
-futures-util = { version = "0.3.31", default-features = false, features = ["std", "sink"] }
+color-eyre.workspace = true
+futures-util.workspace = true
 http-body-util = "0.1.2"
 hyper = { version = "1.5.2", default-features = false, features = ["client", "http2"] }
 hyper-rustls = { version = "0.27.5", default-features = false, features = ["http2", "tls12", "webpki-roots"] }
@@ -27,3 +26,5 @@ tokio = { version = "1.42.0", features = ["macros", "net", "rt-multi-thread", "s
 tokio-tungstenite.workspace = true
 toml = { version = "0.8.19", default-features = false, features = ["parse"] }
 tracing = "0.1.41"
+metrics.workspace = true
+reqwest = "0.13.5"

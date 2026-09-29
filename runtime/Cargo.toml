@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-color-eyre = "0.6.5"
+color-eyre.workspace = true
 tokio.workspace = true
 tokio-tungstenite.workspace = true
 tracing = { workspace = true, features = ["async-await"] }
-tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 nike-database = { path = "../database" }
 nike-socket = { path = "../socket" }
+metrics-exporter-prometheus = "0.18.3"

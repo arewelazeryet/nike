@@ -1,6 +1,9 @@
 use std::sync::atomic::{AtomicPtr, Ordering::SeqCst};
 
-use eyre::{Context, ContextCompat, Result};
+use color_eyre::{
+    Result,
+    eyre::{Context, ContextCompat},
+};
 
 pub struct Authorization {
     // We use an atomic pointer to allow mutation through immutable reference.

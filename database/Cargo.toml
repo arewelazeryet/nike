@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 bigdecimal = { version = "0.4.10", features = ["serde"] }
-color-eyre = "0.6.5"
+color-eyre.workspace = true
 futures = "0.3.32"
 rosu-mods = { version = "0.4.1", features = ["serde"] }
 rosu-v2 = { version = "0.11.0", features = ["serialize"] }
@@ -16,3 +16,4 @@ time = "0.3.53"
 tokio.workspace = true
 tokio-tungstenite.workspace = true
 tracing = { workspace = true, features = ["async-await"] }
+metrics.workspace = true

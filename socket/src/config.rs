@@ -4,7 +4,7 @@ use std::{
     net::{IpAddr, Ipv4Addr},
 };
 
-use eyre::Context;
+use color_eyre::eyre::Context;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

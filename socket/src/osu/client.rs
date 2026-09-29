@@ -1,7 +1,8 @@
 use std::{borrow::Cow, cmp, time::Duration};
 
 use bytes::Bytes;
-use eyre::{Context as _, Result, bail};
+use color_eyre::eyre::Context;
+use color_eyre::{Result, eyre::bail};
 use http_body_util::{BodyExt, Full};
 use hyper::{
     Request, StatusCode,
@@ -13,6 +14,7 @@ use hyper_util::{
     rt::TokioExecutor,
 };
 use memchr::memmem;
+use reqwest::Url;
 use tracing::{debug, error, info, warn};
 
 use crate::config::OsuConfig;
@@ -214,13 +216,35 @@ impl Osu {
 
         let mut backoff = 2;
 
+        let kuma = std::env::var("KUMA_PUSH_ENDPOINT").unwrap();
+        let url = Url::parse(&kuma.clone()).unwrap();
+
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .unwrap();
         loop {
             let fetch_fut = fetch_inner(self, scores, false, cursor_id);
 
             match tokio::time::timeout(Duration::from_secs(10), fetch_fut).await {
-                Ok(Ok(res)) => return res,
-                Ok(Err(err)) => error!(?err, "Failed to fetch scores"),
-                Err(_) => error!("Timeout while awaiting scores"),
+                Ok(Ok(res)) => {
+                    let mut url = url.clone();
+                    url.set_query(Some("status=up&msg=OK"));
+                    let _ = client.get(url).send().await;
+                    return res;
+                }
+                Ok(Err(err)) => {
+                    error!(?err, "Failed to fetch scores");
+                    let mut url = url.clone();
+                    url.set_query(Some("status=down&msg=failed_fetch"));
+                    let _ = client.get(url).send().await;
+                }
+                Err(_) => {
+                    error!("Timeout while awaiting scores");
+                    let mut url = url.clone();
+                    url.set_query(Some("status=down&msg=timeout"));
+                    let _ = client.get(url).send().await;
+                }
             }
 
             info!("Retrying in {backoff}s...");

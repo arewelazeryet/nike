@@ -1,7 +1,10 @@
+use std::time::SystemTime;
+
 use color_eyre::{Result, eyre::Context};
 use futures::future::BoxFuture;
 use futures::stream::BoxStream;
 
+use metrics::{counter, gauge};
 use sqlx::postgres::{PgPoolOptions, PgQueryResult, PgRow, PgStatement, PgTypeInfo};
 use sqlx::{Describe, Error as SqlxError, Execute, PgPool, SqlStr, query, query_as};
 use sqlx::{Either, Executor, Postgres, Transaction, pool::PoolConnection};
@@ -80,12 +83,26 @@ impl Database {
         }
 
         trans.commit().await?;
+        counter!(description: "Number of scores inserted",
+            unit: metrics::Unit::Count,
+            "nike.scores_inserted_since_startup")
+        .increment(batch_length as u64);
+
+        gauge!(description: "Timestamp of the last score insertion",
+            unit: metrics::Unit::Seconds,
+            "nike.last_insertion_success_seconds")
+        .set(
+            SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64(),
+        );
         tracing::info!(parent: &span, "Commit: inserted {batch_length} scores");
 
         Ok(())
     }
 
-    pub async fn get_last_inserted_score(&self) -> Result<i64> {
+    pub async fn get_last_inserted_score(&self) -> Result<Option<i64>> {
         #[derive(sqlx::Type)]
         #[sqlx(transparent)]
         struct ScoreId {
@@ -98,15 +115,14 @@ impl Database {
             WHERE ended_at >= NOW() - INTERVAL '72 hours'
             ORDER BY id DESC LIMIT 1"#
         )
-        .fetch_one(&*self)
+        .fetch_optional(self)
         .await
         .wrap_err("Failed to fetch last score");
-
-        result.map(|r| r.id)
+        result.map(|r| r.map(|r| r.id))
     }
 }
 
-impl<'d, 'p> Executor<'p> for &'d Database {
+impl<'p> Executor<'p> for &Database {
     type Database = Postgres;
 
     #[inline]
